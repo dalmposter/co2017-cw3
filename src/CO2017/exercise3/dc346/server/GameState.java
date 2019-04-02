@@ -18,12 +18,22 @@ public class GameState implements Runnable
 	//Number of guesses so far
 	int guesses;
 	
+	//Is the game over?
 	private boolean finished;
+	//Store theg result of the last guess as a string
 	private String gameState;
+	//Store the time limit (used to initialise gameEnd in run in case there is a delay between instantiating this and starting the thread)
 	private long tl;
+	//Store the date/time at which the game ends (ms since epoch)
 	private long gameEnd;
 	private GuessGameServerHandler ggsh;
 
+	/**
+	 * Create a new game.
+	 * @param mv the max number to guess
+	 * @param tl the time limit for this game
+	 * @param ggsh the server handler for this game
+	 */
 	public GameState(int mv, long tl, GuessGameServerHandler ggsh)
 	{
 		this.tl = tl;
@@ -36,12 +46,13 @@ public class GameState implements Runnable
 	@Override
 	public void run()
 	{
-		gameEnd = new Date().getTime() + tl;
+		//Initialise gameEnd to be now + time limit
+		gameEnd = System.currentTimeMillis() + tl;
 		
 		while(!finished)
 		{
 			//Has the game ended?
-			if(gameEnd < new Date().getTime())
+			if(gameEnd < System.currentTimeMillis())
 			{
 				gameState = "LOSE";
 				finished = true;
@@ -79,13 +90,13 @@ public class GameState implements Runnable
 	 */
 	public long getTimeRemaining()
 	{
-		if(gameEnd - new Date().getTime() > 0) return gameEnd - new Date().getTime();
+		if(gameEnd - System.currentTimeMillis() > 0) return gameEnd - System.currentTimeMillis();
 		return 0;
 	}
 	
 	public long getRemainingSeconds()
 	{
-		return Long.valueOf(Math.round((gameEnd - new Date().getTime()) / 100)) / 10;
+		return Long.valueOf(Math.round((gameEnd - System.currentTimeMillis()) / 100)) / 10;
 	}
 	
 	/**
