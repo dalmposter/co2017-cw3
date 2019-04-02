@@ -7,7 +7,7 @@ import java.util.Random;
 public class GameState implements Runnable
 {
 	//Min number
-	public static int MINVAL = 1;
+	static int MINVAL = 1;
 	//Random generator
 	static Random RANDGEN = new Random();
 	
@@ -20,7 +20,7 @@ public class GameState implements Runnable
 	
 	//Is the game over?
 	private boolean finished;
-	//Store theg result of the last guess as a string
+	//Store the result of the last guess as a string
 	private String gameState;
 	//Store the time limit (used to initialise gameEnd in run in case there is a delay between instantiating this and starting the thread)
 	private long tl;

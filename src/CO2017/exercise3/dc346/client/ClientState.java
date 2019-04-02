@@ -12,8 +12,8 @@ public class ClientState implements Runnable
 	//System.in
 	static final BufferedReader _tty = new BufferedReader(new InputStreamReader(System.in));
 	
-	volatile boolean _finished;
-	String lastGuess;
+	private volatile boolean _finished;
+	private String lastGuess;
 	
 	//Data from server
 	private PrintWriter out;
@@ -81,4 +81,24 @@ public class ClientState implements Runnable
 		//The buffer contains something so we can guarantee no blocking on this read
 		return reader.readLine();
 	}
+	
+	//Get the last guess the user made
+	String getLastGuess()
+	{
+		return lastGuess;
+	}
+
+	
+	//Getter and setter for _finsihed, used in GuessGameClient
+	public boolean is_finished()
+	{
+		return _finished;
+	}
+
+	public void set_finished(boolean _finished)
+	{
+		this._finished = _finished;
+	}
+	
+	
 }

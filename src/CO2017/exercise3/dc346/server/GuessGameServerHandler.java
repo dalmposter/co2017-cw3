@@ -91,13 +91,14 @@ public class GuessGameServerHandler implements Runnable
 			{
 				boolean valid = false;
 				boolean isInt = false;
+				boolean timedOut = false;
 				String guessStr = "";
 				guess = 0;
 				
 				//Try to get the guess from the client. An exception here means they entered a non-integer message
 				try
 				{
-					guessStr = in.readLine();
+					guessStr = readLineTimeout(in, 500);
 					guess = Integer.parseInt(guessStr);
 					
 					//If we didn't cause an exception the client entered an integer
@@ -105,52 +106,53 @@ public class GuessGameServerHandler implements Runnable
 					//If we reach this if statement and pass it, the guess is within the allowed range
 					if(guess <= mv && guess >= GameState.MINVAL) valid = true;
 				}
-				//Causing this exception means the client entered a non-integer guess
-				//Set this flag to send 'ERR non-integer' instead of 'ERR out of range'
+				//Handle exceptions that could occur
 				catch(NumberFormatException ex) { isInt = false; }
+				catch(TimeoutException e) { timedOut = true; }
 				
-				if(!valid)
+				if(!timedOut)
 				{
-					//Send error message to client
-					send(String.format("ERR:%s:%s", game.getTimeRemaining(), game.getGuesses()));
-					if(isInt)
+					if(!valid)
 					{
-						//The client sent an integer out of range. Log this event to the server console
-						log(String.format("%s (ERR out of range)%s/%s", guess, game.getRemainingSeconds(), game.getGuesses()));
+						//Send error message to client
+						send(String.format("ERR:%s:%s", game.getTimeRemaining(), game.getGuesses()));
+						if(isInt)
+						{
+							//The client sent an integer out of range
+							log(String.format("%s (ERR out of range)%s/%s", guess, game.getRemainingSeconds(), game.getGuesses()));
+						}
+						else
+						{
+							//The client didn't send an integer. Log this event to the server console
+							log(String.format("%s (ERR non-integer)%s/%s", guessStr, game.getRemainingSeconds(), game.getGuesses()));
+						}
 					}
 					else
 					{
-						//The client didn't send an integer. Log this event to the server console
-						log(String.format("%s (ERR non-integer)%s/%s", guessStr, game.getRemainingSeconds(), game.getGuesses()));
+						//Send the guess to the GameState
+						game.guess(guess);
+						if(game.finished())
+						{
+							//If the game is finished, break the loop to send end of game message and terminate service
+							serviceover = true;
+						}
+						else
+						{
+							//The game continues, send the result of their guess from the GameState
+							send(String.format("%s:%s:%s", game.toString(), game.getTimeRemaining(), game.getGuesses()));
+						}
+						//Log whatever happened
+						log(String.format("%s (%s)-%ss/%s", guess, game.toString(), game.getRemainingSeconds(), game.getGuesses()));
 					}
-				}
-				else
-				{
-					//Send the guess to the GameState
-					game.guess(guess);
-					if(game.finished())
-					{
-						//If the game is finished, break the loop to send end of game message and terminate service
-						serviceover = true;
-					}
-					else
-					{
-						//The game continues, send them the result of their guess from the GameState
-						send(String.format("%s:%s:%s", game.toString(), game.getTimeRemaining(), game.getGuesses()));
-					}
-					//Log whatever happened
-					log(String.format("%s (%s)-%ss/%s", guess, game.toString(), game.getRemainingSeconds(), game.getGuesses()));
 				}
 			}
-			
-			//If we left the loop the game is over so send a WIN/LOSE message to the client and log to console.
+
 			send(String.format("%s:%s:%s", game.toString(), game.getGuesses(), game.getTarget()));
-			log(String.format("%s (%s)-%ss/%s", guess, game.toString(), game.getRemainingSeconds(), game.getGuesses()));
+			log(String.format("- (%s)-%ss/%s", game.toString(), game.getRemainingSeconds(), game.getGuesses()));
 		}
 		catch (IOException e)
 		{
-			log("Error in Handler.run(): " + e.getMessage());
-			e.printStackTrace();
+			log("Error in Handler.run " + e.getMessage());
 		}
 
 	}
@@ -160,4 +162,23 @@ public class GuessGameServerHandler implements Runnable
 		serviceover = true;
 		client.shutdownInput();
 	}
+	
+	private static String readLineTimeout(BufferedReader reader, long timeout)
+			throws TimeoutException, IOException
+	{
+		long start = new Date().getTime();
+		
+		while(!reader.ready())
+		{
+			if(new Date().getTime() - start >= timeout) throw new TimeoutException();
+			
+			//Delay between polling buffer
+			try { Thread.sleep(50); }
+			catch (Exception e) {	}
+		}
+		
+		//The buffer contains something so we can guarantee no blocking on this read
+		return reader.readLine();
+	}
+
 }

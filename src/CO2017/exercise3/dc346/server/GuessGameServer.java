@@ -15,7 +15,7 @@ public class GuessGameServer
 		ServerSocket server = new ServerSocket(port);
 		
 		//Print start-up message
-		System.out.printf("Starting GuessGame server (%s, %s) on port %s", args[1], Integer.valueOf(args[2]) * 1000, args[0]);
+		System.out.printf("Starting GuessGame server (%s, %s) on port %s%n", args[1], Integer.valueOf(args[2]) * 1000, args[0]);
 		
 		//Loop to accept connections
 		while(true)

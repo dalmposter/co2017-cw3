@@ -33,13 +33,12 @@ public class GuessGameClient
 		//Get and format the message from the server to be printed to client console
 		String[] received = in.readLine().split("\\:");
 		clientState.userPrint(false,
-				String.format("New guessing game. Range is %s..%s. Time limit is %ss",
-						GameState.MINVAL,
+				String.format("New guessing game. Range is 1..%s. Time limit is %ss",
 						received[1],
 						toSeconds(Long.parseLong(received[2]))));
 		
 		//Loop to repeatedly read server responses
-		while(!clientState._finished)
+		while(!clientState.is_finished())
 		{
 			//Interpret response from server
 			received = in.readLine().split("\\:");
@@ -47,16 +46,18 @@ public class GuessGameClient
 			//If the guess was valid but incorrect
 			if(received[0].equals("HIGH") || received[0].equals("LOW"))
 			{
+				//Print whether their guess was high or low
 				clientState.userPrint(false,
 						String.format("Turn %s: %s was %s, %ss remaining",
 								received[2],
-								clientState.lastGuess,
+								clientState.getLastGuess(),
 								received[0],
 								toSeconds(Long.parseLong(received[1]))));
 			}
 			//If the guess was invalid
 			else if(received[0].equals("ERR"))
 			{
+				//Print error message
 				clientState.userPrint(false,
 						String.format("ERROR: Turn %s: %ss remaining",
 								received[2],
@@ -70,7 +71,8 @@ public class GuessGameClient
 								received[1],
 								received[2],
 								received[0]));
-				clientState._finished = true;
+				//Tell client state object that the game is over
+				clientState.set_finished(true);
 			}
 		}
 		
