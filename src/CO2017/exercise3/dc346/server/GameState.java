@@ -94,9 +94,9 @@ public class GameState implements Runnable
 		return 0;
 	}
 	
-	public long getRemainingSeconds()
+	public double getRemainingSeconds()
 	{
-		return Long.valueOf(Math.round((gameEnd - System.currentTimeMillis()) / 100)) / 10;
+		return (Math.floor(getTimeRemaining() / 100) / 10);
 	}
 	
 	/**

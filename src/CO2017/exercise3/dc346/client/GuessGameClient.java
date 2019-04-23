@@ -11,7 +11,9 @@ import java.util.concurrent.TimeoutException;
 import CO2017.exercise3.dc346.server.GameState;
 
 public class GuessGameClient
-{
+{	
+	static boolean won = false;
+	
 	public static void main(String[] args) throws IOException
 	{
 		String hostname = args[0];
@@ -30,7 +32,7 @@ public class GuessGameClient
 		ClientState clientState = new ClientState(out);
 		new Thread(clientState).start();
 		
-		//Get and format the message from the server to be printed to client console
+		//Get and format the intro message from the server to be printed to client console
 		String[] received = in.readLine().split("\\:");
 		clientState.userPrint(false,
 				String.format("New guessing game. Range is 1..%s. Time limit is %ss",
@@ -41,6 +43,7 @@ public class GuessGameClient
 		while(!clientState.is_finished())
 		{
 			//Interpret response from server
+			//split the protocol message at colons to seperate the data
 			received = in.readLine().split("\\:");
 				
 			//If the guess was valid but incorrect
@@ -66,6 +69,8 @@ public class GuessGameClient
 			//If the game is over
 			else
 			{
+				if(received[0].equals("WIN")) won = true;
+				else won = false;
 				clientState.userPrint(true,
 						String.format("Turn %s: target was %s - %s",
 								received[1],

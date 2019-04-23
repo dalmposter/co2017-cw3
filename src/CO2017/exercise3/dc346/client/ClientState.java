@@ -27,6 +27,7 @@ public class ClientState implements Runnable
 	@Override
 	public void run()
 	{
+		//Loop to repeatedly read guesses from the client console and send them to the server
 		while(!_finished)
 		{
 			try
@@ -47,8 +48,8 @@ public class ClientState implements Runnable
 	 */
 	void userPrint(boolean end, String msg)
 	{
-		//If the games over, we interrupted input so need a new line
-		if(end) System.out.println();
+		//If the user lost, we interrupted input so need a new line
+		if(end && !GuessGameClient.won) System.out.println();
 		
 		System.out.println(msg);
 		
@@ -57,7 +58,7 @@ public class ClientState implements Runnable
 	}
 	
 	/**
-	 * Reads a line from given reader
+	 * Helper function that allows the interruption of reading from a buffered reader after a given time.
 	 * @param reader
 	 * @param timeout the length of time to wait for input before timing out (in milliseconds)
 	 * @return The next line from the reader

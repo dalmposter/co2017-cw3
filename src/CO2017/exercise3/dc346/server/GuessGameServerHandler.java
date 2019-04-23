@@ -95,7 +95,7 @@ public class GuessGameServerHandler implements Runnable
 				String guessStr = "";
 				guess = 0;
 				
-				//Try to get the guess from the client. An exception here means they entered a non-integer message
+				//Try to get the guess from the client. An exception here means they entered a non-integer or out of range value
 				try
 				{
 					guessStr = readLineTimeout(in, 500);
@@ -108,7 +108,7 @@ public class GuessGameServerHandler implements Runnable
 				}
 				//Handle exceptions that could occur
 				catch(NumberFormatException ex) { isInt = false; }
-				catch(TimeoutException e) { timedOut = true; }
+				catch(TimeoutException e) 		{ timedOut = true; }
 				
 				if(!timedOut)
 				{
@@ -119,12 +119,12 @@ public class GuessGameServerHandler implements Runnable
 						if(isInt)
 						{
 							//The client sent an integer out of range
-							log(String.format("%s (ERR out of range)%s/%s", guess, game.getRemainingSeconds(), game.getGuesses()));
+							log(String.format("%s (ERR out of range)-%ss/%s", guess, game.getRemainingSeconds(), game.getGuesses()));
 						}
 						else
 						{
 							//The client didn't send an integer. Log this event to the server console
-							log(String.format("%s (ERR non-integer)%s/%s", guessStr, game.getRemainingSeconds(), game.getGuesses()));
+							log(String.format("%s (ERR non-integer)-%ss/%s", guessStr, game.getRemainingSeconds(), game.getGuesses()));
 						}
 					}
 					else
@@ -147,8 +147,10 @@ public class GuessGameServerHandler implements Runnable
 				}
 			}
 
+			//If we left the loop, the games ended
 			send(String.format("%s:%s:%s", game.toString(), game.getGuesses(), game.getTarget()));
-			log(String.format("- (%s)-%ss/%s", game.toString(), game.getRemainingSeconds(), game.getGuesses()));
+			if(game.toString().equals("LOSE")) log(String.format("- (%s)--%ss/%s", game.toString(), game.getRemainingSeconds(), game.getGuesses()));
+			log("Game over");
 		}
 		catch (IOException e)
 		{
@@ -157,12 +159,24 @@ public class GuessGameServerHandler implements Runnable
 
 	}
 	
+	/**
+	 * Callback function to end this game when it's finished.
+	 * @throws IOException
+	 */
 	public void shutdownInput() throws IOException
 	{
 		serviceover = true;
 		client.shutdownInput();
 	}
 	
+	/**
+	 * Helper function to interrupt reading from a buffered reader after a given time.
+	 * @param reader
+	 * @param timeout
+	 * @return
+	 * @throws TimeoutException
+	 * @throws IOException
+	 */
 	private static String readLineTimeout(BufferedReader reader, long timeout)
 			throws TimeoutException, IOException
 	{
